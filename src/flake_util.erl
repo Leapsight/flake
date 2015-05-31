@@ -19,6 +19,7 @@
 
 -export ([
 	  as_list/2,
+    get_default_if/0,
 	  get_if_hw_int/1,
 	  hw_addr_to_int/1,
 	  curr_time_millis/0,
@@ -26,6 +27,27 @@
 	 ]).
 
 -include_lib("eunit/include/eunit.hrl").
+
+%% get a reasonable default interface that has a valid mac address
+%% From https://github.com/sdebnath/flake/commit/5ef6de5b43f7666e98cc8e48be7416453f013e0d
+get_default_if() ->
+  {ok, SysIfs} = inet:getifaddrs(),
+  Ifs = [I || {I, Props} <- SysIfs, filter_if(Props)],
+  hd(Ifs).
+
+filter_if(Props) ->
+  HwAddr = proplists:get_value(hwaddr, Props),
+  case HwAddr of
+      % We exclude interfaces without a MAC address
+      undefined ->
+          false;
+      % We exclude interfaces with a null MAC address, ex: loopback devices
+      [0,0,0,0,0,0] ->
+          false;
+      % All others are valid interfaces to pick from
+      _ ->
+          true
+  end.
 
 %% get the mac/hardware address of the given interface as a 48-bit integer
 get_if_hw_int(undefined) ->

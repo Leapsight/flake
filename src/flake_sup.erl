@@ -59,7 +59,7 @@ upgrade() ->
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
 init([]) ->
-    If = flake:get_config_value(interface, "eth0"),
+    If = flake:get_config_value(interface, flake_util:get_default_if()),
     lager:info("Starting flake with hardware address of ~p as worker id~n", [If]),
     {ok,WorkerId} = flake_util:get_if_hw_int(If),
     lager:info("Using worker id: ~p~n", [WorkerId]),
