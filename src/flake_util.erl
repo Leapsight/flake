@@ -69,7 +69,7 @@ hw_addr_to_int(HwAddr) ->
     WorkerId.
 
 curr_time_millis() ->
-    {MegaSec,Sec, MicroSec} = erlang:now(),
+    {MegaSec,Sec, MicroSec} = erlang:timestamp(),
     1000000000*MegaSec + Sec*1000 + erlang:trunc(MicroSec/1000).
 
 gen_id(Time,WorkerId,Sequence) ->
