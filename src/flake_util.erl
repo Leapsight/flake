@@ -22,7 +22,6 @@
     get_default_if/0,
 	  get_if_hw_int/1,
 	  hw_addr_to_int/1,
-	  curr_time_millis/0,
 	  gen_id/3
 	 ]).
 
@@ -42,7 +41,7 @@ filter_if(Props) ->
       undefined ->
           false;
       % We exclude interfaces with a null MAC address, ex: loopback devices
-      [0,0,0,0,0,0] ->
+      [0, 0, 0, 0|_] ->
           false;
       % All others are valid interfaces to pick from
       _ ->
@@ -68,9 +67,6 @@ hw_addr_to_int(HwAddr) ->
     <<WorkerId:48/integer>> = erlang:list_to_binary(HwAddr),
     WorkerId.
 
-curr_time_millis() ->
-    {MegaSec,Sec, MicroSec} = erlang:timestamp(),
-    1000000000*MegaSec + Sec*1000 + erlang:trunc(MicroSec/1000).
 
 gen_id(Time,WorkerId,Sequence) ->
     <<Time:64/integer, WorkerId:48/integer, Sequence:16/integer>>.
@@ -118,14 +114,14 @@ as_list(I0, Base, R0) ->
 	true ->
 	    as_list(I1, Base, R1)
     end.
-  
-  
+
+
 %% ----------------------------------------------------------
 %% tests
 %% ----------------------------------------------------------
 
 flake_test() ->
-    TS = flake_util:curr_time_millis(),
+    TS = erlang:system_time(millisecond),
     Worker = flake_util:hw_addr_to_int(lists:seq(1, 6)),
     Flake = flake_util:gen_id(TS, Worker, 0),
     <<Time:64/integer, WorkerId:48/integer, Sequence:16/integer>> = Flake,

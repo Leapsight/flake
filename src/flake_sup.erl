@@ -45,7 +45,7 @@ upgrade() ->
     Old = sets:from_list([Name || {Name, _, _, _} <- supervisor:which_children(?MODULE)]),
     New = sets:from_list([Name || {Name, _, _, _, _, _} <- Specs]),
     Kill = sets:subtract(Old, New),
-  
+
     sets:fold(
       fun(Id, ok) ->
 	      supervisor:terminate_child(?MODULE, Id),
@@ -63,14 +63,14 @@ init([]) ->
     lager:info("Starting flake with hardware address of ~p as worker id~n", [If]),
     {ok,WorkerId} = flake_util:get_if_hw_int(If),
     lager:info("Using worker id: ~p~n", [WorkerId]),
-  
+
     FlakeConfig = [
 		   {worker_id, WorkerId}
 		  ],
     Flake = {flake,
 	     {flake_server, start_link, [FlakeConfig]},
 	     permanent, 5000, worker, [flake_server]},
-    
+
     TimestampPath = flake:get_config_value(timestamp_path, "/tmp/flake-timestamp-dets"),
     AllowableDowntime = flake:get_config_value(allowable_downtime, 0),
 
@@ -83,7 +83,7 @@ init([]) ->
 
     {ok,TS} = persistent_timer:read_timestamp(TimestampTable),
     ?debugVal(TS),
-    Now = flake_util:curr_time_millis(),
+    Now = erlang:system_time(millisecond),
     ?debugVal(Now),
     TimeSinceLastRun = Now - TS,
 
@@ -91,6 +91,7 @@ init([]) ->
     %% 1) the clock time last recorded is later than the current time
     %% 2) the last recorded time is more than N ms in the past to prevent
     %%    generating future ids in the event that the system clock is set to some point far in the future
+    io:format("{~p,~p,~p,~p}~n", [Now, TS, TimeSinceLastRun, AllowableDowntime]),
     check_for_clock_error(Now >= TS, TimeSinceLastRun < AllowableDowntime),
 
     lager:info("Saving timestamps to ~p every 1s~n", [TimestampPath]),
@@ -101,7 +102,7 @@ init([]) ->
     PersistentTimer = {persistent_timer,
 		       {persistent_timer,start_link,[TimerConfig]},
 		       permanent, 5000, worker, [persistent_timer]},
-    
+
     {ok, { {one_for_one, 10, 10}, [Flake, PersistentTimer]} }.
 
 check_for_clock_error(true,true) ->

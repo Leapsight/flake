@@ -82,7 +82,7 @@ code_change(_, State, _) -> {ok, State}.
 %% write the current time stamp to disk
 %% {ok,Timestamp=int()} | {error,Reason}
 write_timestamp(Table) ->
-    TS = flake_util:curr_time_millis(),
+    TS = erlang:system_time(millisecond),
     ok = dets:insert(Table,{last_timestamp,TS}),
     {ok,TS}.
 

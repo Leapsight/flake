@@ -76,14 +76,14 @@ respond(X) ->
 %% ----------------------------------------------------------
 
 init([{worker_id, WorkerId}]) ->
-    {ok, #state{max_time=flake_util:curr_time_millis(), worker_id=WorkerId, sequence=0}}.
+    {ok, #state{max_time=erlang:system_time(millisecond), worker_id=WorkerId, sequence=0}}.
 
 handle_call(get, _From, State = #state{max_time=MaxTime, worker_id=WorkerId, sequence=Sequence}) ->
-    {Resp, S0} = get(flake_util:curr_time_millis(), MaxTime, WorkerId, Sequence, State),
+    {Resp, S0} = get(erlang:system_time(millisecond), MaxTime, WorkerId, Sequence, State),
     {reply, Resp, S0};
 
 handle_call({get,Base}, _From, State = #state{max_time=MaxTime,worker_id=WorkerId,sequence=Sequence}) ->
-    {Resp, S0} = get(flake_util:curr_time_millis(), MaxTime, WorkerId, Sequence, State),
+    {Resp, S0} = get(erlang:system_time(millisecond), MaxTime, WorkerId, Sequence, State),
     case Resp of
 	{ok, Id} ->
 	    <<IntId:128/integer>> = Id,
@@ -93,11 +93,11 @@ handle_call({get,Base}, _From, State = #state{max_time=MaxTime,worker_id=WorkerI
     end;
 
 handle_call(get_reverse, _From, State = #state{max_time=MaxTime, worker_id=WorkerId, sequence=Sequence}) ->
-    {Resp, S0} = get_reverse(flake_util:curr_time_millis(), MaxTime, WorkerId, Sequence, State),
+    {Resp, S0} = get_reverse(erlang:system_time(millisecond), MaxTime, WorkerId, Sequence, State),
     {reply, Resp, S0};
 
 handle_call({get_reverse,Base}, _From, State = #state{max_time=MaxTime,worker_id=WorkerId,sequence=Sequence}) ->
-    {Resp, S0} = get_reverse(flake_util:curr_time_millis(), MaxTime, WorkerId, Sequence, State),
+    {Resp, S0} = get_reverse(erlang:system_time(millisecond), MaxTime, WorkerId, Sequence, State),
     case Resp of
       {ok, Id} ->
           <<IntId:128/integer>> = Id,
@@ -117,7 +117,7 @@ handle_info(_, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_, State, _) -> {ok, State}.
-  
+
 %% clock hasn't moved, increment sequence
 get(Time,Time,WorkerId,Seq0,State) ->
     Sequence = Seq0 + 1,

@@ -7,3 +7,7 @@ rel/flake/
 
 
 /.rebar/
+_build/**
+log/error.log
+log/console.log
+log/crash.log
